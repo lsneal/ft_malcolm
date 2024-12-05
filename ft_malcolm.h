@@ -14,6 +14,8 @@
 
 #include <sys/socket.h>
 #include <sys/ioctl.h>
+#include <sys/types.h>
+
 
 #include <net/if_arp.h>
 #include <net/if.h>
@@ -23,30 +25,35 @@
 
 #include <linux/if_packet.h>
 
+#include <ifaddrs.h>
+
 #define SIZE_IP 16
 #define SIZE_MAC_ADDRESS 18
 
-typedef struct machine {
+struct machine {
 
-    char ip[SIZE_IP];
-    char mac[SIZE_MAC_ADDRESS];
+    char *ip;
+    char *mac;
 };
 
-typedef struct header {
+struct header {
 
     struct ether_header ethernet;
     struct arphdr arp;
 };
 
-typedef struct malcolm {
+struct malcolm {
 
-    struct machine *source;
-    struct machine *target;
-    
-    struct header  *header;
+    char    **interfaces;
+    struct machine source;
+    struct machine target;
+
+    struct header  header;
     struct sockaddr_ll socket_address;
     struct ifreq    ifr;
 };
+
+//void    parse_arg(char **argv, struct malcolm *arp);
 
 /*
     Associer l'adresse IP de la victime à l'adresse MAC de l'attaquant
@@ -133,6 +140,17 @@ typedef struct malcolm {
     	u_char	arp_tpa[4];		/* target protocol address 
     };
 
+- inet_pton: Créer une structure d'adresse réseau
+- inet_ntop: Convertir des adresses IPv4 et IPv6 sous forme binaire en texte
+- if_nametoindex: Renvoie l'indice de l'interface réseau correspondant au parametre
+- inet_addr: 
+- gethostbyname:
+- getaddrinfo:  Renvoie une ou plusieurs structures addrinfo
+- freeaddrinfo:
+- getifaddrs: Crée une liste chaînée de structures décrivant les interfaces réseau
+- freeifaddrs:
+- htons: Convertit un entier 16 bits du format de l'hôte vers le format réseau (big-endian).
+- ntohs: Convertit un entier 16 bits du format réseau (big-endian) vers le format de l'hôte.
 
 */
 
