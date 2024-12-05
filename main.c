@@ -1,9 +1,19 @@
 #include "ft_malcolm.h"
 
-void    get_mac_address(char *interface) {
+void    parse_arg(char **argv, struct malcolm *arp) {
+
+    arp->source.ip = strdup(argv[1]);
+    arp->source.mac = strdup(argv[2]);
+    arp->target.ip = strdup(argv[3]);
+    arp->target.mac = strdup(argv[4]);
+}
+
+char    *get_mac_address(char *interface) {
 
     int sock;
     struct ifreq ifr;
+    struct sockaddr_in *addr;
+    char *address;
 
     sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock == -1) {
@@ -12,26 +22,50 @@ void    get_mac_address(char *interface) {
     }
     strcpy(ifr.ifr_name, interface);
 
+    // SIOCGIFADDR --> for ip 
+    // SIOCGIFHWADDR --> for mac
     if (ioctl(sock, SIOCGIFHWADDR, &ifr)== -1) {
         printf("Error ioctl\n");
         close(sock);
-        return ;
+        return (NULL);
     }
-    
-    //printf("L'adresse IP de l'interface %s est : %s\n", ifr.ifr_name, inet_ntoa(ifr.ifr_addr));
+	addr = (struct sockaddr_in *)&(ifr.ifr_addr);
+    address = inet_ntoa(addr->sin_addr);
 
     unsigned char *mac = (unsigned char *)ifr.ifr_hwaddr.sa_data;
-    printf("Mac address de %s: %02x:%02x:%02x:%02x:%02x:%02x\n", ifr.ifr_name, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-
     close(sock);
+
+    return (mac);
 }
 
-void    parse_arg(char **argv, struct malcolm *arp) {
+char    *get_ip_address(char *interface) {
 
-    arp->source.ip = strdup(argv[1]);
-    arp->source.mac = strdup(argv[2]);
-    arp->target.ip = strdup(argv[3]);
-    arp->target.mac = strdup(argv[4]);
+    int sock;
+    struct ifreq ifr;
+    struct sockaddr_in *addr;
+    char *address;
+
+    sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock == -1) {
+        printf("socket error\n");
+        return ;
+    }
+    strcpy(ifr.ifr_name, interface);
+
+    // SIOCGIFADDR --> for ip 
+    // SIOCGIFHWADDR --> for mac
+    if (ioctl(sock, SIOCGIFADDR, &ifr)== -1) {
+        printf("Error ioctl\n");
+        close(sock);
+        return (NULL);
+    }
+	addr = (struct sockaddr_in *)&(ifr.ifr_addr);
+    address = inet_ntoa(addr->sin_addr);
+
+    unsigned char *mac = (unsigned char *)ifr.ifr_hwaddr.sa_data;
+    close(sock);
+
+    return (mac);
 }
 
 int			sizelist(struct ifaddrs **head)
@@ -58,13 +92,20 @@ void    get_interface_enabled(struct malcolm *arp) {
         return ;
     }
     size = sizelist(&ifa) / 2;
-    arp->interfaces = malloc(sizeof(char *) * size);
+    arp->interface = malloc(sizeof(char *) * size);
     while(i < size - 1) {
-        arp->interfaces[i] = strdup(ifa->ifa_name);
+        arp->interface[i] = strdup(ifa->ifa_name);
         ifa = ifa->ifa_next;
         i++;    
     }
-    arp->interfaces[i] = NULL;
+    arp->interface[i] = NULL;
+}
+
+void check_ip_and_mac(struct malcolm arp) {
+
+    for (int i = 0; arp.interface[i]; i++) {
+
+    }
 }
 
 int main(int argc, char **argv) {
@@ -81,8 +122,11 @@ int main(int argc, char **argv) {
     //arp.source.ip = strdup(argv[1]);
     get_interface_enabled(&arp);
 
-    for (int i = 0; arp.interfaces[i]; i++) {
-        get_mac_address(arp.interfaces[i]);
+    // check les ips et interface;
+
+    for (int i = 0; arp.interface[i]; i++) {
+        get_mac_address(arp.interface[i]);
+        get_ip_address(arp.interface[i]);
     }
     return (0);
 }

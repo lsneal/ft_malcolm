@@ -44,7 +44,7 @@ struct header {
 
 struct malcolm {
 
-    char    **interfaces;
+    char    **interface;
     struct machine source;
     struct machine target;
 
