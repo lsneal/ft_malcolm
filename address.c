@@ -59,8 +59,9 @@ char    *get_ip_address(char *interface) {
 
     
     //char *ip = inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
-    printf("%s\n", address);
-    //printf("mac: %s\n", mac);
+    
+    //printf("%s\n", address);
+    
     close(sock);
 
     return (address);

@@ -16,7 +16,6 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 
-
 #include <net/if_arp.h>
 #include <net/if.h>
 
@@ -24,8 +23,8 @@
 //#include <linux/if.h>
 
 #include <linux/if_packet.h>
-
 #include <ifaddrs.h>
+#include <stdbool.h>
 
 #define SIZE_IP 16
 #define SIZE_MAC_ADDRESS 6
