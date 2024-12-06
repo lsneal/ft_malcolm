@@ -28,7 +28,7 @@
 #include <ifaddrs.h>
 
 #define SIZE_IP 16
-#define SIZE_MAC_ADDRESS 18
+#define SIZE_MAC_ADDRESS 6
 
 struct machine {
 
@@ -53,7 +53,14 @@ struct malcolm {
     struct ifreq    ifr;
 };
 
-//void    parse_arg(char **argv, struct malcolm *arp);
+/*  UTILS.c   */
+void    parse_arg(char **argv, struct malcolm *arp);
+void    free_interface(struct malcolm *arp);
+int			sizelist(struct ifaddrs **head);
+
+/*  ADDRESS.c   */
+unsigned char    *get_mac_address(char *interface);
+char    *get_ip_address(char *interface);
 
 /*
     Associer l'adresse IP de la victime à l'adresse MAC de l'attaquant

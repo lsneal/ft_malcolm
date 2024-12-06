@@ -1,7 +1,8 @@
 NAME = ft_malcolm
 
 SRC = main.c \
-	  #utils.c
+	  utils.c \
+	  address.c
 
 
 
