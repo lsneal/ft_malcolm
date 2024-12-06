@@ -63,18 +63,18 @@ struct malcolm {
     
     struct arphdr
       {
-        unsigned short int ar_hrd;                /* Format of hardware address. 
-        unsigned short int ar_pro;                /* Format of protocol address. 
-        unsigned char ar_hln;                /* Length of hardware address. 
-        unsigned char ar_pln;                /* Length of protocol address. 
-        unsigned short int ar_op;                /* ARP opcode (command). 
+        unsigned short int ar_hrd;                / Format of hardware address. 
+        unsigned short int ar_pro;                / Format of protocol address. 
+        unsigned char ar_hln;                / Length of hardware address. 
+        unsigned char ar_pln;                / Length of protocol address. 
+        unsigned short int ar_op;                / ARP opcode (command). 
     #if 0
-        /* Ethernet looks like this : This bit is variable sized
+        / Ethernet looks like this : This bit is variable sized
            however...  
-        unsigned char __ar_sha[ETH_ALEN];        /* Sender hardware address. 
-        unsigned char __ar_sip[4];                /* Sender IP address. 
-        unsigned char __ar_tha[ETH_ALEN];        /* Target hardware address. 
-        unsigned char __ar_tip[4];                /* Target IP address.  
+        unsigned char __ar_sha[ETH_ALEN];        / Sender hardware address. 
+        unsigned char __ar_sip[4];                / Sender IP address. 
+        unsigned char __ar_tha[ETH_ALEN];        / Target hardware address. 
+        unsigned char __ar_tip[4];                / Target IP address.  
     #endif
       };
 
@@ -88,20 +88,20 @@ struct malcolm {
     données (niveau 2) avec des sockets raw (bruts), comme pour envoyer des paquets ARP.
     
     struct sockaddr_ll {
-        unsigned short sll_family;   /* Always AF_PACKET 
-        unsigned short sll_protocol; /* Physical-layer protocol 
-        int            sll_ifindex;  /* Interface number 
-        unsigned short sll_hatype;   /* ARP hardware type 
-        unsigned char  sll_pkttype;  /* Packet type 
-        unsigned char  sll_halen;    /* Length of address 
-        unsigned char  sll_addr[8];  /* Physical-layer address 
+        unsigned short sll_family;   / Always AF_PACKET 
+        unsigned short sll_protocol; / Physical-layer protocol 
+        int            sll_ifindex;  / Interface number 
+        unsigned short sll_hatype;   / ARP hardware type 
+        unsigned char  sll_pkttype;  / Packet type 
+        unsigned char  sll_halen;    / Length of address 
+        unsigned char  sll_addr[8];  / Physical-layer address 
     };
 
     - Elle est utilisée pour obtenir des informations sur une interface réseau, 
     comme l'adresse MAC de l'interface qui enverra la requête ARP
     
     struct ifreq {
-        char ifr_name[IFNAMSIZ]; /* nom interface 
+        char ifr_name[IFNAMSIZ]; / nom interface 
         union {
             struct sockaddr ifr_addr;
             struct sockaddr ifr_dstaddr;
@@ -120,8 +120,8 @@ struct malcolm {
     };
 
     struct sockaddr {
-        sa_family_t     sa_family;      /* Address family
-        char            sa_data[];      /* Socket address 
+        sa_family_t     sa_family;      / Address family
+        char            sa_data[];      / Socket address 
     };
 
     ///// For ARP request
@@ -133,11 +133,11 @@ struct malcolm {
     };
 
     struct	ether_arp {
-    	struct	arphdr ea_hdr;		/* fixed-size header 
-    	struct	ether_addr arp_sha;	/* sender hardware address 
-    	u_char	arp_spa[4];		/* sender protocol address 
-    	struct	ether_addr arp_tha;	/* target hardware address 
-    	u_char	arp_tpa[4];		/* target protocol address 
+    	struct	arphdr ea_hdr;		/ fixed-size header 
+    	struct	ether_addr arp_sha;	/ sender hardware address 
+    	u_char	arp_spa[4];		/ sender protocol address 
+    	struct	ether_addr arp_tha;	/ target hardware address 
+    	u_char	arp_tpa[4];		/ target protocol address 
     };
 
 - inet_pton: Créer une structure d'adresse réseau
