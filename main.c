@@ -85,6 +85,44 @@ bool check_mac_address(struct malcolm arp, char *mac) {
     return (true);
 }
 
+void    send_arp() {
+
+    // init struct sockaddr_ll
+    struct sockaddr_ll  sockaddr;
+    struct ethhdr       *ethhdr;
+    struct arpHdr       *arphdr;
+    char    buffer[SIZE_ARP];
+
+    memset(buffer, 0x00, SIZE_ARP);
+    ethhdr = (struct ethhder *)buffer;
+
+    sockaddr.sll_family = AF_PACKET;
+    sockaddr.sll_protocol = htons(ETH_P_ARP); // 0x0806 for ARP protocol
+    sockaddr.sll_infindex = interface --> ifr.ifindex;
+    sockaddr.sll_hatype = htons(ARPHRD_ETHER);
+    sockaddr.sll_pkttype = PACKET_BROADCAST;
+    sockaddr.sll_halen = SIZE_MAC_ADDRESS;
+    sockaddr.sll_addr[6] = 0x00;
+    sockaddr.sll_addr[7] = 0x00;
+
+    //  set header ethernet header
+    //ethhdr->h_dest = ; --> destination eth addr
+    //ethhdr->h_source = ; --> source eth addr
+    ethhdr->h_proto = htons(ETH_P_ARP); // 0x0806 ARP protocol 
+
+    // set header arp 
+    arphdr->ar_hrd = htons(HW_TYPE);
+    arphdr->ar_pro = htons(ETH_P_IP); 
+    arphdr->ar_hln = SIZE_MAC_ADDRESS;
+    arphdr->ar_pln = SIZE_IPV4_ADDRESS;
+    arphdr->ar_op = ARPOP_REPLY; // reply arp
+
+    //arphdr->__ar_sha[6] --> sender mac address
+    //arphdr->__ar_sip[4] --> sender IP address
+    //arphdr->__ar_tha[6] --> target mac address
+    //  arphdr->__ar_tip[4] --> target IP address
+}
+
 void    receive_arp(struct malcolm arp) {
 
     (void)arp;
@@ -102,7 +140,8 @@ void    receive_arp(struct malcolm arp) {
         return ;
     }
 
-    while (1) {
+    while (1) 
+    {
 
         data_size = recvfrom(sockfd, buffer, SIZE_ARP, 0, NULL, NULL);
         if (data_size < 0) {
@@ -125,6 +164,7 @@ void    receive_arp(struct malcolm arp) {
                 print_mac("source", arphdr->__ar_tha);
                 print_ip("target", arphdr->__ar_sip);
                 print_mac("target", arphdr->__ar_tha);
+                // send ARP packet with spoofing if ARPOP_REQUEST
             } 
             else if (ntohs(arphdr->ar_op) == ARPOP_REPLY)
             {

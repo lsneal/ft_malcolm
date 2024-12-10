@@ -28,28 +28,38 @@
 
 #define SIZE_IP 16
 #define SIZE_MAC_ADDRESS 6
+#define SIZE_IPV4_ADDRESS 4
 #define SIZE_ARP 42  // Taille d'un paquet ARP typique (Ethernet + ARP)
+
 struct machine {
 
     char *ip;
     char *mac;
 };
 
-struct header {
-
-    struct ether_header ethernet;
-    struct arphdr arp;
-};
-
 struct malcolm {
 
     char    **interface;
+    int     interfaceidx;
     struct machine source;
     struct machine target;
 
-    struct header  header;
     struct sockaddr_ll socket_address;
     struct ifreq    ifr;
+};
+
+struct arpHdr {
+
+    unsigned short int ar_hrd;  /* Format of hardware address. */
+    unsigned short int ar_pro;  /* Format of protocol address. */
+    unsigned char ar_hln;       /* Length of hardware address. */
+    unsigned char ar_pln;       /* Length of protocol address. */
+    unsigned short int ar_op;   /* ARP opcode (command). */
+
+    unsigned char __ar_sha[ETH_ALEN]; /* Sender hardware address. */
+    unsigned char __ar_sip[4];         /* Sender IP address. */
+    unsigned char __ar_tha[ETH_ALEN]; /* Target hardware address. */
+    unsigned char __ar_tip[4];        /* Target IP address. */
 };
 
 /*  UTILS.c   */
@@ -66,42 +76,13 @@ void    print_mac(char *machine, unsigned char *mac);
 unsigned char    *get_mac_address(char *interface);
 char    *get_ip_address(char *interface);
 
-struct arpHdr {
-
-    unsigned short int ar_hrd;  /* Format of hardware address. */
-    unsigned short int ar_pro;  /* Format of protocol address. */
-    unsigned char ar_hln;       /* Length of hardware address. */
-    unsigned char ar_pln;       /* Length of protocol address. */
-    unsigned short int ar_op;   /* ARP opcode (command). */
-
-    unsigned char __ar_sha[ETH_ALEN]; /* Sender hardware address. */
-    unsigned char __ar_sip[4];         /* Sender IP address. */
-    unsigned char __ar_tha[ETH_ALEN]; /* Target hardware address. */
-    unsigned char __ar_tip[4];        /* Target IP address. */
-};
-
 /*
-    Associer l'adresse IP de la victime à l'adresse MAC de l'attaquant
 
-    - Cette structure représente un paquet ARP. Elle contient les 
-    champs spécifiés dans le format ARP pour les requêtes et les réponses.
-    
-    struct arphdr
-      {
-        unsigned short int ar_hrd;           / Format of hardware address. 
-        unsigned short int ar_pro;           / Format of protocol address. 
-        unsigned char ar_hln;                / Length of hardware address. 
-        unsigned char ar_pln;                / Length of protocol address. 
-        unsigned short int ar_op;            / ARP opcode (command). 
-    #if 0
-        / Ethernet looks like this : This bit is variable sized
-           however...  
-        unsigned char __ar_sha[ETH_ALEN];    / Sender hardware address. 
-        unsigned char __ar_sip[4];           / Sender IP address. 
-        unsigned char __ar_tha[ETH_ALEN];    / Target hardware address. 
-        unsigned char __ar_tip[4];           / Target IP address.  
-    #endif
-      };
+    struct ethhdr {
+            unsigned char        h_dest[ETH_ALEN];    / destination eth addr       
+            unsigned char        h_source[ETH_ALEN];  / source ether addr       
+            __be16                h_proto;            / packet type ID field       
+    } __attribute__((packed));
 
     struct ether_header {
         u_char  ether_dhost[6];    / Adresse MAC de destination
