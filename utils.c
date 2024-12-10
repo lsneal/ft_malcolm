@@ -14,6 +14,10 @@ void    free_interface(struct malcolm *arp) {
         free(arp->interface[i]);
     }
     free(arp->interface);
+	free(arp->source.ip);
+	free(arp->source.mac);
+	free(arp->target.ip);
+	free(arp->target.mac);
 }
 
 int			sizelist(struct ifaddrs **head)
@@ -29,4 +33,49 @@ int			sizelist(struct ifaddrs **head)
 		count++;
 	}
 	return (count);
+}
+
+static long	ft_compt(long nb)
+{
+	long	size;
+
+	size = 0;
+	if (nb < 0)
+		size++;
+	else if (nb == 0)
+		size++;
+	while (nb != 0)
+	{
+		size++;
+		nb /= 10;
+	}
+	return (size);
+}
+
+char	*ft_itoa(int n)
+{
+	int		size;
+	long	nb;
+	char	*s;
+
+	nb = n;
+	size = ft_compt(nb);
+	s = malloc(sizeof(char) * (size + 1));
+	if (!s)
+		return (NULL);
+	if (nb < 0)
+	{
+		s[0] = '-';
+		nb *= -1;
+	}
+	else if (nb == 0)
+		s[0] = '0';
+	s[size] = '\0';
+	while (nb > 0)
+	{
+		s[size - 1] = (nb % 10) + 48;
+		nb /= 10;
+		size--;
+	}
+	return (s);
 }

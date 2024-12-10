@@ -2,7 +2,8 @@ NAME = ft_malcolm
 
 SRC = main.c \
 	  utils.c \
-	  address.c
+	  address.c \
+	  print.c
 
 
 

@@ -28,7 +28,7 @@
 
 #define SIZE_IP 16
 #define SIZE_MAC_ADDRESS 6
-
+#define SIZE_ARP 42  // Taille d'un paquet ARP typique (Ethernet + ARP)
 struct machine {
 
     char *ip;
@@ -56,10 +56,29 @@ struct malcolm {
 void    parse_arg(char **argv, struct malcolm *arp);
 void    free_interface(struct malcolm *arp);
 int			sizelist(struct ifaddrs **head);
+char	*ft_itoa(int n);
+
+/*  PRINT.c   */
+void    print_ip(char *machine, unsigned char *ip);
+void    print_mac(char *machine, unsigned char *mac);
 
 /*  ADDRESS.c   */
 unsigned char    *get_mac_address(char *interface);
 char    *get_ip_address(char *interface);
+
+struct arpHdr {
+
+    unsigned short int ar_hrd;  /* Format of hardware address. */
+    unsigned short int ar_pro;  /* Format of protocol address. */
+    unsigned char ar_hln;       /* Length of hardware address. */
+    unsigned char ar_pln;       /* Length of protocol address. */
+    unsigned short int ar_op;   /* ARP opcode (command). */
+
+    unsigned char __ar_sha[ETH_ALEN]; /* Sender hardware address. */
+    unsigned char __ar_sip[4];         /* Sender IP address. */
+    unsigned char __ar_tha[ETH_ALEN]; /* Target hardware address. */
+    unsigned char __ar_tip[4];        /* Target IP address. */
+};
 
 /*
     Associer l'adresse IP de la victime à l'adresse MAC de l'attaquant
@@ -69,25 +88,25 @@ char    *get_ip_address(char *interface);
     
     struct arphdr
       {
-        unsigned short int ar_hrd;                / Format of hardware address. 
-        unsigned short int ar_pro;                / Format of protocol address. 
+        unsigned short int ar_hrd;           / Format of hardware address. 
+        unsigned short int ar_pro;           / Format of protocol address. 
         unsigned char ar_hln;                / Length of hardware address. 
         unsigned char ar_pln;                / Length of protocol address. 
-        unsigned short int ar_op;                / ARP opcode (command). 
+        unsigned short int ar_op;            / ARP opcode (command). 
     #if 0
         / Ethernet looks like this : This bit is variable sized
            however...  
-        unsigned char __ar_sha[ETH_ALEN];        / Sender hardware address. 
-        unsigned char __ar_sip[4];                / Sender IP address. 
-        unsigned char __ar_tha[ETH_ALEN];        / Target hardware address. 
-        unsigned char __ar_tip[4];                / Target IP address.  
+        unsigned char __ar_sha[ETH_ALEN];    / Sender hardware address. 
+        unsigned char __ar_sip[4];           / Sender IP address. 
+        unsigned char __ar_tha[ETH_ALEN];    / Target hardware address. 
+        unsigned char __ar_tip[4];           / Target IP address.  
     #endif
       };
 
     struct ether_header {
-        u_char  ether_dhost[6];    // Adresse MAC de destination
-        u_char  ether_shost[6];    // Adresse MAC source
-        u_short ether_type;        // Type de protocole (0x0806 pour ARP)
+        u_char  ether_dhost[6];    / Adresse MAC de destination
+        u_char  ether_shost[6];    / Adresse MAC source
+        u_short ether_type;        / Type de protocole (0x0806 pour ARP)
     };
 
     - Cette structure est utilisée pour la communication au niveau de la couche de liaison de
