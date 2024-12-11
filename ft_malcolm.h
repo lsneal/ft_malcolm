@@ -31,6 +31,8 @@
 #define SIZE_IPV4_ADDRESS 4
 #define SIZE_ARP 42  // Taille d'un paquet ARP typique (Ethernet + ARP)
 
+#define HW_ADDR 1
+
 struct machine {
 
     char *ip;
@@ -74,7 +76,7 @@ void    print_mac(char *machine, unsigned char *mac);
 
 /*  ADDRESS.c   */
 unsigned char    *get_mac_address(char *interface);
-char    *get_ip_address(char *interface);
+char    *get_ip_address(char *interface, int *index);
 
 /*
 

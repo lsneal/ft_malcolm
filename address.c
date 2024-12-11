@@ -32,7 +32,7 @@ unsigned char    *get_mac_address(char *interface) {
     return (mac);
 }
 
-char    *get_ip_address(char *interface) {
+char    *get_ip_address(char *interface, int *index) {
 
     int sock;
     struct ifreq ifr;
@@ -54,10 +54,11 @@ char    *get_ip_address(char *interface) {
         close(sock);
         return (NULL);
     }
+
 	addr = (struct sockaddr_in *)&(ifr.ifr_addr);
     address = inet_ntoa(addr->sin_addr);
 
-    
+    *index = ifr.ifr_ifindex;
     //char *ip = inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
     
     //printf("%s\n", address);
