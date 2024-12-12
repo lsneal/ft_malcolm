@@ -90,24 +90,7 @@ bool check_mac_address(struct malcolm arp, unsigned char *mac) {
     return (true);
 }
 
-void    to_int(struct malcolm *arp) {
 
-    unsigned char tab[3];
-
-    for (int i = 0, j = 0; arp->source.ip[i]; i++) {
-        if (arp->source.ip[i] != '.' || arp->source.ip[i + 1] != '.') {
-            printf("source[%d]\n", arp->source.ip[i]);
-            tab[0] = arp->source.ip[i];
-            tab[1] = arp->source.ip[i + 1];
-            printf("source[%d] [%d]\n", tab[0], tab[1]);
-            arp->source.int_ip[j] = atoi((const char*)tab);
-            printf("int = %d", arp->source.int_ip[j]);
-        }
-    }
-    for (int i = 0; i < SIZE_IPV4_ADDRESS; i++) {
-        printf("tab[%d] = %d\n", i, arp->source.int_ip[i]);
-    }
-}
 
 void    send_arp(struct malcolm *arp) {
 
@@ -237,6 +220,32 @@ void    receive_arp(struct malcolm *arp) {
     }
 }
 
+unsigned int    *to_int(unsigned char *ip, unsigned char *mac) {
+
+    unsigned char tab[3];
+    unsigned int i_tab[SIZE_IPV4_ADDRESS];
+    (void)mac;
+
+    for (int i = 0, j = 0, t = 0; ip[i]; i++) {
+        if (ip[i] != '.') {
+            j = 0;
+            while (ip[i] && ip[i] != '.') {
+                tab[j] = ip[i];
+                i++;
+                j++;
+            }
+            if (t < SIZE_IPV4_ADDRESS) {
+                i_tab[t] = atoi((const char *)tab);
+                t++;
+            }
+        }
+    }
+    return (i_tab);
+    /*for (int i = 0; i < SIZE_MAC_ADDRESS; i++) {
+        printf("tab[%d] = %d\n", i, *i_tab[i]);
+    }*/
+}
+
 // check l'ip et l'adresse mac des arg avec la meme interface
 int main(int argc, char **argv) {
 
@@ -253,7 +262,13 @@ int main(int argc, char **argv) {
 
     bool source = check_ip_argument(arp, arp.source.ip, &arp.interfaceidx);
     bool target = check_ip_argument(arp, arp.target.ip, &arp.interfaceidx);
-    to_int(&arp);
+
+    to_int(arp.source.ip, arp.source.mac);
+    
+    /*for (int i = 0; i < SIZE_MAC_ADDRESS; i++) {
+        printf("tab[%d] = %d\n", i, arp.source.int_ip[i]);
+    }*/
+
     (void)source;
     (void)target;
     //check_mac_address(arp, arp.source.mac);
