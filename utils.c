@@ -2,10 +2,11 @@
 
 void    parse_arg(char **argv, struct malcolm *arp) {
 
-    arp->source.ip = strdup(argv[1]);
-    arp->source.mac = strdup(argv[2]);
-    arp->target.ip = strdup(argv[3]);
-    arp->target.mac = strdup(argv[4]);
+    arp->source.ip = (unsigned char *)strdup(argv[1]);
+    arp->source.mac = (unsigned char *)strdup(argv[2]);
+    arp->target.ip = (unsigned char *)strdup(argv[3]);
+    arp->target.mac = (unsigned char *)strdup(argv[4]);
+	printf("address1: %p\n", &arp->source.ip);
 }
 
 void    free_interface(struct malcolm *arp) {
