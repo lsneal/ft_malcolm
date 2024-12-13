@@ -2,9 +2,9 @@
 
 void    parse_arg(char **argv, struct malcolm *arp) {
 
-    arp->source.ip = (unsigned char *)strdup(argv[1]);
+    arp->source.ip = strdup(argv[1]);
     arp->source.mac = (unsigned char *)strdup(argv[2]);
-    arp->target.ip = (unsigned char *)strdup(argv[3]);
+    arp->target.ip = strdup(argv[3]);
     arp->target.mac = (unsigned char *)strdup(argv[4]);
 	printf("address1: %p\n", &arp->source.ip);
 }
@@ -79,4 +79,24 @@ char	*ft_itoa(int n)
 		size--;
 	}
 	return (s);
+}
+
+uint32_t	hex2int(char *hex) {
+
+    uint32_t val = 0;
+    
+	while (*hex) {
+        // get current character then increment
+        uint8_t byte = *hex++; 
+        // transform hex character to the 4bit equivalent number, using the ascii table indexes
+        if (byte >= '0' && byte <= '9') 
+            byte = byte - '0';
+        else if (byte >= 'a' && byte <='f') 
+            byte = byte - 'a' + 10;
+        else if (byte >= 'A' && byte <='F') 
+            byte = byte - 'A' + 10;    
+        // shift 4 to make space for new digit, and add the 4 bits of the new digit 
+        val = (val << 4) | (byte & 0xF);
+    }
+    return (val);
 }

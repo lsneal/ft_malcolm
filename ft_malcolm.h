@@ -35,7 +35,7 @@
 
 struct machine {
 
-    unsigned char *ip;
+    char *ip;
     unsigned char *mac;
     unsigned int int_ip[SIZE_IPV4_ADDRESS];
     unsigned int int_mac[SIZE_MAC_ADDRESS];
@@ -71,6 +71,7 @@ void    parse_arg(char **argv, struct malcolm *arp);
 void    free_interface(struct malcolm *arp);
 int			sizelist(struct ifaddrs **head);
 char	*ft_itoa(int n);
+uint32_t	hex2int(char *hex);
 
 /*  PRINT.c   */
 void    print_ip(char *machine, unsigned char *ip);
@@ -79,6 +80,8 @@ void    print_mac(char *machine, unsigned char *mac);
 /*  ADDRESS.c   */
 unsigned char    *get_mac_address(char *interface);
 char    *get_ip_address(char *interface, int *index);
+void    macto_int(struct malcolm *arp);
+void    ipto_int(struct malcolm *arp);
 
 /*
 

@@ -67,3 +67,73 @@ char    *get_ip_address(char *interface, int *index) {
 
     return (address);
 }
+
+void    macto_int(struct malcolm *arp) {
+
+    char tab[SIZE_MAC_ADDRESS] = {0};
+
+    for (int i = 0, j = 0, t = 0; i < (int)strlen((char *)arp->source.mac); i++) {
+        if (arp->source.mac[i] && arp->source.mac[i] != ':') {
+            j = 0;
+            while (j < SIZE_MAC_ADDRESS && arp->source.mac[i] && arp->source.mac[i] != ':') {
+                tab[j] = arp->source.mac[i];
+                i++;
+                j++;
+            }
+            if (t < SIZE_MAC_ADDRESS) {
+                arp->source.int_mac[t] = hex2int(tab);
+                t++;
+            }
+        }
+    }
+    memset(tab, 0x00, SIZE_MAC_ADDRESS);
+    for (int i = 0, j = 0, t = 0; i < (int)strlen((char *)arp->target.mac); i++) {
+        if (arp->target.mac[i] && arp->target.mac[i] != ':') {
+            j = 0;
+            while (j < SIZE_MAC_ADDRESS && arp->target.mac[i] && arp->target.mac[i] != ':') {
+                tab[j] = arp->target.mac[i];
+                i++;
+                j++;
+            }
+            if (t < SIZE_MAC_ADDRESS) {
+                arp->target.int_mac[t] = hex2int(tab);
+                t++;
+            }
+        }
+    }
+}
+
+void    ipto_int(struct malcolm *arp) {
+
+    char tab[SIZE_IPV4_ADDRESS] = {0};
+
+    for (int i = 0, j = 0, t = 0; i < (int)strlen(arp->source.ip); i++) {
+        if (arp->source.ip[i] && arp->source.ip[i] != '.') {
+            j = 0;
+            while (j < SIZE_IPV4_ADDRESS && arp->source.ip[i] && arp->source.ip[i] != '.') {
+                tab[j] = arp->source.ip[i];
+                i++;
+                j++;
+            }
+            if (t < SIZE_IPV4_ADDRESS) {
+                arp->source.int_ip[t] = atoi((const char *)tab);
+                t++;
+            }
+        }
+    }
+    memset(tab, 0x00, SIZE_IPV4_ADDRESS);
+    for (int i = 0, j = 0, t = 0; i < (int)strlen(arp->target.ip); i++) {
+        if (arp->target.ip[i] && arp->target.ip[i] != '.') {
+            j = 0;
+            while (j < SIZE_IPV4_ADDRESS && arp->target.ip[i] && arp->target.ip[i] != '.') {
+                tab[j] = arp->target.ip[i];
+                i++;
+                j++;
+            }
+            if (t < SIZE_IPV4_ADDRESS) {
+                arp->target.int_ip[t] = atoi((const char *)tab);
+                t++;
+            }
+        }
+    }
+}
