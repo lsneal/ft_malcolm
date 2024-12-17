@@ -6,7 +6,7 @@ void    get_interface_enabled(struct malcolm *arp) {
     struct ifaddrs *ifa, *ifatemp;
     int i = 0, size = 0;
     if (getifaddrs(&ifa) == -1) {
-        printf("Error get interface\n");
+        perror("Interface:");
         return ;
     }
     ifatemp = ifa;
@@ -31,65 +31,18 @@ bool check_ip_argument(struct malcolm arp, char *ip, int *iffindex) {
     while (arp.interface[i]) 
     {
         ipt = get_ip_address(arp.interface[i], &ifindex);
-        if (!ipt)
-            continue ;
-        if (strcmp(ipt, (char *)ip) == 0) {
-            *iffindex = ifindex;
-            return (true);
-        }
-        i++;
-    }
-    return (false);
-}
-
-bool compare_mac(unsigned char *mac, char *hexa, int k) {
-
-    //if (hexa[k] == ':')
-    //    k++;
-    printf("mac = %02x %02x\n", mac[k], (unsigned char)mac[k + 1]);
-    if (hexa[0] == mac[k] && mac[k] == mac[k + 1])
-        return (true);
-
-    return (false);
-}
-
-bool check_mac_address(struct malcolm arp, unsigned char *mac) {
-
-    int i = 0, j = 0, hex = 0, k = 0;
-    //char hexa[2];
-    unsigned char *mact = NULL;
-    char    *hexa;
-
-    printf("mac_source = %s\n", mac);
-    
-    while (arp.interface[i]) {
-        j = 0;
-        mact = get_mac_address(arp.interface[i]);
-        if (!mact)
-            continue ; 
-        while (j < 6) {
-            hex = mact[j];
-            hexa = ft_itoa(hex);
-            int o = 0;
-            while (o < 6) {
-                printf("%02x:", (unsigned char)hexa[o]);
-                o++;
+        //if (!ipt)
+        //    continue ;
+        if (ipt) {
+            if (strcmp(ipt, (char *)ip) == 0) {
+                *iffindex = ifindex;
+                return (true);
             }
-            printf("\n");
-            printf("hex = %02x %02x --> ", hexa[0], hexa[1]);
-            if (compare_mac(mac, hexa, k) == true)
-                k++;
-            j++;
         }
-        //printf("hex = %02x ", mact[0]);
-
-        free(mact);
-        printf("\n");
         i++;
     }
-    return (true);
+    return (false);
 }
-
 
 void    send_arp(struct malcolm *arp) {
 
@@ -102,7 +55,7 @@ void    send_arp(struct malcolm *arp) {
     // for bind socket with struct sockaddr_ll
     int fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ARP));
     if (fd < 1) {
-        printf("Error fd\n");
+        perror("Socket:");
         return ;
     }
 
@@ -110,7 +63,7 @@ void    send_arp(struct malcolm *arp) {
     sockaddr.sll_family = AF_PACKET;
     sockaddr.sll_ifindex = arp->interfaceidx;
     if (bind(fd, (struct sockaddr*)&sockaddr, sizeof(struct sockaddr_ll)) < 0) {
-        printf("Error bind\n");
+        perror("Bind:");
         return ;
     }
 
@@ -135,23 +88,13 @@ void    send_arp(struct malcolm *arp) {
 
         ethhdr->h_source[i] = arp->source.int_mac[i];
         arphdr->__ar_sha[i] = arp->source.int_mac[i];
-        arphdr->__ar_tha[i] = arp->source.int_mac[i];
+        arphdr->__ar_tha[i] = arp->target.int_mac[i];
         sockaddr.sll_addr[i] = arp->source.int_mac[i];
     }
     printf("hdest = %s\n", ethhdr->h_dest);
     printf("\n%02x:%02x:%02x:%02x:%02x:%02x\n", arp->target.int_mac[0], arp->target.int_mac[1], arp->target.int_mac[2], arp->target.int_mac[3], arp->target.int_mac[4], arp->target.int_mac[5]);
     printf("\n%02x:%02x:%02x:%02x:%02x:%02x\n", ethhdr->h_dest[0], ethhdr->h_dest[1], ethhdr->h_dest[2], ethhdr->h_dest[3], ethhdr->h_dest[4], ethhdr->h_dest[5]);
 
-    //memcpy(ethhdr->h_source, arp->source.mac, SIZE_MAC_ADDRESS);
-
-    // set header arp mac
-    //memcpy(arphdr->__ar_sha, arp->source.mac, SIZE_MAC_ADDRESS);
-
-    //memcpy(sockaddr.sll_addr, arp->source.mac, SIZE_MAC_ADDRESS);
-    
-    // TEST -> target mac = attack mac
-    //memcpy(arphdr->__ar_tha, arp->source.mac, SIZE_MAC_ADDRESS);
-    
     ethhdr->h_proto = htons(ETH_P_ARP); // 0x0806 ARP protocol 
 
     // set header arp 
@@ -169,10 +112,12 @@ void    send_arp(struct malcolm *arp) {
     //memcpy(arphdr->__ar_tip, arp->target.ip, SIZE_IPV4_ADDRESS); // target ip
 
     // send arp packet with sockaddr_ll
-    int ret = sendto(fd, buffer, SIZE_ARP, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
-    if (ret == -1) {
-        printf("Error send\n");
-        return ;
+    for (int i = 0; i < 5; i++) {
+        int ret = sendto(fd, buffer, SIZE_ARP, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
+        if (ret == -1) {
+            perror("Send:");
+            return ;
+        }
     }
     printf("SEND\n");
     printf("Source IP: %d.%d.%d.%d\n", arphdr->__ar_sip[0], arphdr->__ar_sip[1], arphdr->__ar_sip[2], arphdr->__ar_sip[3]);
@@ -182,7 +127,7 @@ void    send_arp(struct malcolm *arp) {
 
 }
 
-void    receive_arp(struct malcolm *arp) {
+void    waiting_arp(struct malcolm *arp) {
 
     (void)arp;
     ssize_t data_size = 0;
@@ -195,16 +140,15 @@ void    receive_arp(struct malcolm *arp) {
     // use sudo 
     sockfd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ARP)); 
     if (sockfd < 0) {
-        printf("Error socket\n");
-        return ;
+        perror("Socket");
+        return ; 
     }
 
     while (1) 
     {
-
         data_size = recvfrom(sockfd, buffer, SIZE_ARP, 0, NULL, NULL);
         if (data_size < 0) {
-            printf("Error receive\n");
+            perror("Receive");
             return ;
         }
         // get header eth
@@ -246,7 +190,8 @@ int main(int argc, char **argv) {
     //(void)argc;
     //(void)argv; 
     if (argc != 5) {
-        printf("Error arg\n");
+        dprintf(2, "Error: arguments\n\n");
+        help();
         return (1);
     }
     struct malcolm arp;
@@ -257,31 +202,19 @@ int main(int argc, char **argv) {
     bool source = check_ip_argument(arp, arp.source.ip, &arp.interfaceidx);
     bool target = check_ip_argument(arp, arp.target.ip, &arp.interfaceidx);
 
-    printf("IP : %s\n", arp.source.ip);
     ipto_int(&arp);
     macto_int(&arp);
 
     (void)source;
     (void)target;
-    //check_mac_address(arp, arp.source.mac);
-    //check_mac_address(arp, arp.target.mac);
-    /*if (source == false || target == false) {
-        printf("IP or mac error\n");
+    source = check_mac_address(&arp, arp.source.mac);
+    target = check_mac_address(&arp, arp.target.mac);
+    if (source == false || target == false) {
+        dprintf(2, "IP or mac error\n");
         return (1);
-    }*/
-    receive_arp(&arp);
-    /*for (int i = 0; arp.interface[i]; i++) {
-        printf("interface = %s\n", arp.interface[i]);
-        unsigned char *str = get_mac_address(arp.interface[i]);
-        int j = 0;
-        while (j < 6) {
-            printf("%02x:", str[j]);
-            j++;
-        }
-        printf("\n");
-        free(str);
-        get_ip_address(arp.interface[i]);
-    }*/
+    }
+    waiting_arp(&arp);
+
     free_interface(&arp);
     return (0);
 }

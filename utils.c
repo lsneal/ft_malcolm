@@ -6,7 +6,6 @@ void    parse_arg(char **argv, struct malcolm *arp) {
     arp->source.mac = (unsigned char *)strdup(argv[2]);
     arp->target.ip = strdup(argv[3]);
     arp->target.mac = (unsigned char *)strdup(argv[4]);
-	printf("address1: %p\n", &arp->source.ip);
 }
 
 void    free_interface(struct malcolm *arp) {

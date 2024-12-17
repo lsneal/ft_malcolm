@@ -83,6 +83,12 @@ char    *get_ip_address(char *interface, int *index);
 void    macto_int(struct malcolm *arp);
 void    ipto_int(struct malcolm *arp);
 
+/*  HELP.c      */
+void    help();
+
+
+bool check_mac_address(struct malcolm *arp, unsigned char *mac);
+
 /*
 
     struct ethhdr {

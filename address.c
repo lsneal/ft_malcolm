@@ -9,7 +9,7 @@ unsigned char    *get_mac_address(char *interface) {
 
     sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock == -1) {
-        printf("socket error\n");
+        perror("Socket");
         return (NULL);
     }
     ifr.ifr_addr.sa_family = AF_INET;
@@ -18,9 +18,8 @@ unsigned char    *get_mac_address(char *interface) {
     // SIOCGIFADDR --> for ip 
     // SIOCGIFHWADDR --> for mac
     if (ioctl(sock, SIOCGIFHWADDR, &ifr)== -1) {
-        printf("Error ioctl\n");
-        close(sock);
-        return (NULL);
+        perror("Ioctl");
+        goto close;
     }
 	addr = (struct sockaddr_in *)&(ifr.ifr_addr);
     address = inet_ntoa(addr->sin_addr);
@@ -28,8 +27,10 @@ unsigned char    *get_mac_address(char *interface) {
 
     unsigned char *mac = malloc(7);
     memcpy(mac, (unsigned char *)ifr.ifr_hwaddr.sa_data, 6);
-    close (sock);
-    return (mac);
+
+    close:
+        close (sock);
+        return (mac);
 }
 
 char    *get_ip_address(char *interface, int *index) {
@@ -41,18 +42,18 @@ char    *get_ip_address(char *interface, int *index) {
 
     sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock == -1) {
-        printf("socket error\n");
+        perror("Socket:");
         return (NULL);
     }
     //printf("interface = %s\n", interface);
+    ifr.ifr_addr.sa_family = AF_INET;
     strcpy(ifr.ifr_name, interface);
 
     // SIOCGIFADDR --> for ip 
     // SIOCGIFHWADDR --> for mac
     if (ioctl(sock, SIOCGIFADDR, &ifr)== -1) {
-        printf("Error ioctl\n");
-        close(sock);
-        return (NULL);
+        //perror("Iooctl:");
+        goto close;
     }
 
 	addr = (struct sockaddr_in *)&(ifr.ifr_addr);
@@ -63,9 +64,9 @@ char    *get_ip_address(char *interface, int *index) {
     
     //printf("%s\n", address);
     
-    close(sock);
-
-    return (address);
+    close:
+        close(sock);
+        return (address);
 }
 
 void    macto_int(struct malcolm *arp) {
@@ -136,4 +137,11 @@ void    ipto_int(struct malcolm *arp) {
             }
         }
     }
+}
+
+bool check_mac_address(struct malcolm *arp, unsigned char *mac) {
+    (void)mac;
+    if (strlen((char *)arp->source.mac) != 17 || strlen((char *)arp->target.mac) != 17)
+        return (false);
+    return (true);
 }
