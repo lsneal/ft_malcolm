@@ -47,6 +47,7 @@ char    *get_ip_address(char *interface, int *index) {
     }
     //printf("interface = %s\n", interface);
     ifr.ifr_addr.sa_family = AF_INET;
+    printf("interface = %s\n", interface);
     strcpy(ifr.ifr_name, interface);
 
     // SIOCGIFADDR --> for ip 
@@ -59,7 +60,9 @@ char    *get_ip_address(char *interface, int *index) {
 	addr = (struct sockaddr_in *)&(ifr.ifr_addr);
     address = inet_ntoa(addr->sin_addr);
 
-    *index = ifr.ifr_ifindex;
+    printf("index = %d\n", ifr.ifr_ifindex);
+    printf("address %s\n", address);
+    *index = ifr.ifr_ifindex + 1 ;
     //char *ip = inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
     
     //printf("%s\n", address);
@@ -106,36 +109,29 @@ void    macto_int(struct malcolm *arp) {
 
 void    ipto_int(struct malcolm *arp) {
 
-    char tab[SIZE_IPV4_ADDRESS] = {0};
+    //char tab[SIZE_IPV4_ADDRESS] = {0};
 
-    for (int i = 0, j = 0, t = 0; i < (int)strlen(arp->source.ip); i++) {
-        if (arp->source.ip[i] && arp->source.ip[i] != '.') {
-            j = 0;
-            while (j < SIZE_IPV4_ADDRESS && arp->source.ip[i] && arp->source.ip[i] != '.') {
-                tab[j] = arp->source.ip[i];
-                i++;
-                j++;
-            }
-            if (t < SIZE_IPV4_ADDRESS) {
-                arp->source.int_ip[t] = atoi((const char *)tab);
-                t++;
-            }
-        }
+    char *ip_copy = strdup(arp->target.ip);
+    char *token;
+    int i = 0;
+
+    token = strtok(ip_copy, ".");
+    while (token != NULL && i < 4) {
+        arp->target.int_ip[i] = atoi(token);
+        token = strtok(NULL, ".");
+        i++;
     }
-    memset(tab, 0x00, SIZE_IPV4_ADDRESS);
-    for (int i = 0, j = 0, t = 0; i < (int)strlen(arp->target.ip); i++) {
-        if (arp->target.ip[i] && arp->target.ip[i] != '.') {
-            j = 0;
-            while (j < SIZE_IPV4_ADDRESS && arp->target.ip[i] && arp->target.ip[i] != '.') {
-                tab[j] = arp->target.ip[i];
-                i++;
-                j++;
-            }
-            if (t < SIZE_IPV4_ADDRESS) {
-                arp->target.int_ip[t] = atoi((const char *)tab);
-                t++;
-            }
-        }
+    free(ip_copy);
+    ip_copy = NULL;
+    
+    ip_copy = strdup(arp->source.ip);
+    i = 0;
+
+    token = strtok(ip_copy, ".");
+    while (token != NULL && i < 4) {
+        arp->source.int_ip[i] = atoi(token);
+        token = strtok(NULL, ".");
+        i++;
     }
 }
 

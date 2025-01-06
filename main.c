@@ -72,7 +72,7 @@ void    send_arp(struct malcolm *arp) {
     arphdr = (struct arpHdr *)(buffer + 14); // size header = 42 -> size arp packet
     sockaddr.sll_family = AF_PACKET;
     sockaddr.sll_protocol = htons(ETH_P_ARP); // 0x0806 for ARP protocol
-    sockaddr.sll_ifindex = arp->interfaceidx;
+    sockaddr.sll_ifindex = 2;
     sockaddr.sll_hatype = htons(ARPHRD_ETHER);
     sockaddr.sll_pkttype = PACKET_BROADCAST;
     sockaddr.sll_halen = SIZE_MAC_ADDRESS;
@@ -91,9 +91,11 @@ void    send_arp(struct malcolm *arp) {
         arphdr->__ar_tha[i] = arp->target.int_mac[i];
         sockaddr.sll_addr[i] = arp->source.int_mac[i];
     }
-    printf("hdest = %s\n", ethhdr->h_dest);
-    printf("\n%02x:%02x:%02x:%02x:%02x:%02x\n", arp->target.int_mac[0], arp->target.int_mac[1], arp->target.int_mac[2], arp->target.int_mac[3], arp->target.int_mac[4], arp->target.int_mac[5]);
-    printf("\n%02x:%02x:%02x:%02x:%02x:%02x\n", ethhdr->h_dest[0], ethhdr->h_dest[1], ethhdr->h_dest[2], ethhdr->h_dest[3], ethhdr->h_dest[4], ethhdr->h_dest[5]);
+    //printf("\n%02x:%02x:%02x:%02x:%02x:%02x\n", ethhdr->h_source[0], ethhdr->h_source[1], ethhdr->h_source[2], ethhdr->h_source[3], ethhdr->h_source[4], ethhdr->h_source[5]);
+    //printf("\n%02x:%02x:%02x:%02x:%02x:%02x\n", ethhdr->h_dest[0], ethhdr->h_dest[1], ethhdr->h_dest[2], ethhdr->h_dest[3], ethhdr->h_dest[4], ethhdr->h_dest[5]);
+    //printf("\n%02x:%02x:%02x:%02x:%02x:%02x\n", arp->target.int_mac[0], arp->target.int_mac[1], arp->target.int_mac[2], arp->target.int_mac[3], arp->target.int_mac[4], arp->target.int_mac[5]);
+    //printf("\n%02x:%02x:%02x:%02x:%02x:%02x\n", ethhdr->h_dest[0], ethhdr->h_dest[1], ethhdr->h_dest[2], ethhdr->h_dest[3], ethhdr->h_dest[4], ethhdr->h_dest[5]);
+    printf("interface = %d\n", arp->interfaceidx);
 
     ethhdr->h_proto = htons(ETH_P_ARP); // 0x0806 ARP protocol 
 
@@ -110,8 +112,8 @@ void    send_arp(struct malcolm *arp) {
     }
     //memcpy(arphdr->__ar_sip, arp->source.ip, SIZE_IPV4_ADDRESS); // source ip
     //memcpy(arphdr->__ar_tip, arp->target.ip, SIZE_IPV4_ADDRESS); // target ip
-
     // send arp packet with sockaddr_ll
+
     for (int i = 0; i < 5; i++) {
         int ret = sendto(fd, buffer, SIZE_ARP, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
         if (ret == -1) {
@@ -177,7 +179,7 @@ void    waiting_arp(struct malcolm *arp) {
                 print_mac("source", arphdr->__ar_tha);
                 print_ip("target", arphdr->__ar_sip);
                 print_mac("target", arphdr->__ar_tha);
-                send_arp(arp);
+                //send_arp(arp);
 
             }
         }
@@ -205,8 +207,12 @@ int main(int argc, char **argv) {
     ipto_int(&arp);
     macto_int(&arp);
 
-    (void)source;
-    (void)target;
+    printf("Source str IP: %s\n", arp.source.ip);
+    printf("Target str IP: %s\n", arp.target.ip);
+    /*for (int i = 0; i < SIZE_IPV4_ADDRESS; i++) {
+        printf("%d.", arp.source.int_ip[i]);
+    }*/
+    printf("\n");
     source = check_mac_address(&arp, arp.source.mac);
     target = check_mac_address(&arp, arp.target.mac);
     if (source == false || target == false) {
